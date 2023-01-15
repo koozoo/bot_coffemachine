@@ -1,11 +1,10 @@
-from aiogram.types import Message, CallbackQuery
 from bot.database.RedisClient import RedisClient
-from bot.services import api, NewUser
-from bot.database.methods import create, get
-from bot.database.models import user
+from bot.services import api, UserService
+from bot.database.methods import create, get, update
 from bot.misc.env import Stuff
+from bot.database.models import user, managerUser
 
-redis_cli = RedisClient()
+redis_cli_db_0 = RedisClient()
 
 
 class UserStart:
@@ -14,7 +13,7 @@ class UserStart:
     def __init__(self, uid):
         self.uid = uid
 
-    async def _valid_company(self, data):
+    async def _validate_company(self, data):
         # get data company
 
         # if add
@@ -22,33 +21,93 @@ class UserStart:
         # company_data = await api.get_company()
         # db.add_head_company
 
-        # if get
         # db.get_head_company_by_id (param: title)
         # add data in redis if not
 
-    async def _valid_user(self, in_come_data: dict) -> tuple:
-        print(in_come_data)
-        # - check in db
-        data = [(item.is_activ, item.user_id, item.role, item.access,) for item in await get.get_user_by_id(self.uid)]
+    async def _validate_user(self, in_come_data: dict = None):
 
-        if data:
-            if data[0][0]:
-                return data[0]
+        if in_come_data:
+            # get data in DB
+            data = [(item.user_id, item.is_activ, item.role, item.access, item.company_id, item.unit_id)
+                    for item in await get.get_user_by_id(self.uid)]
+            # сравниваем данные из базы и данные которые пришли
+
+            # DATA USER
+            if data:
+                # check data
+                print(in_come_data)
             else:
-                return tuple(data[0][0])
-        else:
-            if in_come_data:
-                if self.uid not in Stuff().STUFF:
-                    role = 4
-                else:
+                # ROLE
+                if self.uid in Stuff.STUFF:
                     role = 1
-                item = user.User(user_id=self.uid, role=role, access=in_come_data['access_lvl'])
-                usr = NewUser.NewUser(self.uid)
-                new_user = await usr.create_new_user(item)
-                print(new_user)
-            # - select role
+                else:
+                    role = 4
 
-            return tuple("et")
+                # check MANAGER
+                manager_data = [(item.is_activ, item.role) for item in
+                                await get.get_user_by_id(in_come_data["manager_tid"])]
+
+                if manager_data:
+                    # check manager data
+                    if manager_data[0][1] == 3:
+                        # is manager it is ok
+                        print(" manager is ok")
+                        pass
+                    else:
+                        # update data role
+                        # api request and response data http://url/manager_id(1C_id)
+                        api_response = {
+                            "name": "Maksim El",
+                            "phone": "8-123-123-12-12",
+                            "email": "exempl@mail.ru",
+                            "role": 3
+                        }
+                        await update.update_user_by_id(in_come_data["manager_tid"], api_response)
+                        redis_cli_db_0.set_user_data(in_come_data["manager_tid"], api_response)
+                else:
+                    # api request manager id
+                    # data get api data manager
+
+                    # create manager with data api response
+                    item = user.User(user_id=in_come_data["manager_tid"], name="Name Manager",
+                                     access=0,
+                                     role=3, company_id=0, phone="manager phone",
+                                     email="manager email",
+                                     unit_id=0)
+                    # return data and save redis
+                    obj_new_manager = UserService.UserService(in_come_data["manager_tid"])
+                    manager_data = await obj_new_manager.create_new_user(item)
+
+                # create manager
+                item = user.User(user_id=self.uid, name=in_come_data["tg_name"], access=in_come_data["access"],
+                                 role=role, company_id=in_come_data["company_id"],
+                                 unit_id=in_come_data["unit"])
+
+                obj_new_user = UserService.UserService(self.uid)
+                user_data = await obj_new_user.create_new_user(item)
+
+                # add user in table managerUser
+                item = managerUser.ManagerUser(self.uid, in_come_data["manager_tid"])
+                await obj_new_user.add_link_to_manager(item)
+                return user_data, manager_data
+        else:
+            # check cache USER
+            if redis_cli_db_0.get_user_data_by_uid(self.uid):
+                data = redis_cli_db_0.get_user_data_by_uid(self.uid)
+            else:
+                # get data in DB
+                data = [(item.user_id, item.is_activ, item.role, item.access, item.company_id, item.unit_id)
+                        for item in await get.get_user_by_id(self.uid)]
+
+            if data:
+                pass
+            else:
+                # create base user
+                item = user.User(user_id=self.uid)
+                await create.add_item(item)
+
+    async def _validate_access(self):
+        pass
 
     async def start(self, context, text: str):
 
@@ -61,35 +120,29 @@ class UserStart:
 
             # parse user data
             api_data["manager_id"] = int(id_manager)
-            api_data["tg_manager_id"] = int(tg_id_manager)
-            api_data["head_company_id"] = int(head_company_id)
-            api_data["access_un it_company_id"] = int(access_unit_company)
-            api_data["access_lvl"] = int(access_lvl)
+            api_data["manager_tid"] = int(tg_id_manager)
+            api_data["company_id"] = int(head_company_id)
+            api_data["unit"] = int(access_unit_company)
+            api_data["access"] = int(access_lvl)
+            api_data["tg_name"] = context.from_user.full_name
 
-            # validate user and select role + access
-            user_status = await self._valid_user(api_data)
-            print(user_status)
-            # validate company in db add/get
+            # validate user
+            user_status = await self._validate_user(api_data)
+
+            # validate company
             # await self._valid_company(api_data)
+
+            # validate access
 
         else:
             text = "test_obj"
 
-            # try get data user if not access deny
-            # validate user and select role + access
-            user_status = await self._valid_user(api_data)
-            print(user_status)
+            # validate user
+            user_status = await self._validate_user()
+            # return data user (company_id)
 
-            # if user in db check company -> if in db get company and add to redis
+            # validate company
 
-            # check user
-            # - select unit
-            # - select access
+            # validate access
 
         await context.bot.send_message(self.uid, text)
-
-    def __repr__(self):
-        return f"{id(self)} {self.uid}"
-
-    def __del__(self):
-        print("Объект удален")

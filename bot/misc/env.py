@@ -36,7 +36,6 @@ class DB:
     DATABASE_PASSWORD = os.environ.get("DATABASE_PASSWORD")
 
     def get_setting(self, table):
-        print(self.DATABASE_PASSWORD)
         return f"postgresql+asyncpg://" \
                f"{self.DATABASE_LOGIN}" \
                f"{self.DATABASE_PASSWORD}@" \

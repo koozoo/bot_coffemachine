@@ -9,6 +9,6 @@ class SupervisorManager(Base):
     supervisor_id = Column(Integer)
     manager_id = Column(Integer)
 
-    def __init__(self, super, manager):
-        self.supervisor_id = super
+    def __init__(self, super_, manager):
+        self.supervisor_id = super_
         self.manager_id = manager
