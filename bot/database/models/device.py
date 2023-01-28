@@ -5,16 +5,18 @@ from sqlalchemy import Integer, Column, String, Boolean
 class Device(Base):
     __tablename__ = "divices"
 
-    id = Column(Integer, primary_key=True)
+    id = Column(String, primary_key=True)
     model = Column(String)
+    device_type = Column(String)
     sn = Column(String)
-    company_id = Column(Integer)
-    address_id = Column(Integer)
+    company_id = Column(String)
+    address_id = Column(String)
     is_activ = Column(Boolean)
 
-    def __init__(self, id, model, sn, company_id, address_id, is_activ):
+    def __init__(self, id, model, device_type, sn, company_id, address_id, is_activ=True):
         self.id = id
         self.model = model
+        self.device_type = device_type
         self.sn = sn
         self.company_id = company_id
         self.address_id = address_id

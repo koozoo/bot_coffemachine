@@ -5,9 +5,11 @@ import uuid
 
 
 class RedisClient:
+
     ################################
     # DB_0 - CACHE                 #
     ################################
+
     def __init__(self, host="127.0.0.1", port=6379, db=0, password=None, socket_timeout=None):
         self.host = host
         self.port = port
@@ -44,30 +46,45 @@ class RedisClient:
             data = redis_cli.hgetall(f"user:{uid}")
         return data
 
-    def set_company_data(self, company_id, data: Union[dict, tuple]):
+    def set_company_data(self, company_id: str, data: Union[dict]):
         with self._connect_redis() as redis_cli:
-            if type(data) is dict:
-                for key, value in data.items():
-                    redis_cli.hset(f"company:{company_id}", key=key, value=value)
+            for key, value in data.items():
+                redis_cli.hset(f"company:{company_id}", key=key, value=value)
 
-            elif type(data) is tuple:
-                key = ("id", "is_activ", "title", "description", "phone")
-
-                lst = list(zip(key, data))
-
-                for i in lst:
-                    key = i[0]
-
-                    if i[1] is None:
-                        value = 0
-                    else:
-                        value = i[1]
-
-                    redis_cli.hset(f"company:{company_id}", key=key, value=str(value))
-
-    def get_company_data(self, company_id):
+    def get_all_company_ltd(self, company_id: str):
         with self._connect_redis() as redis_cli:
             data = redis_cli.hgetall(f"company:{company_id}")
+            return data
+
+    def set_company_ltd_data(self, company_id: str, ltd_id: str, data: Union[dict]):
+        with self._connect_redis() as redis_cli:
+            for key, value in data.items():
+                redis_cli.hset(f"company:{company_id}:{ltd_id}", key=key, value=value)
+
+    def get_company_ltd_data(self, company_id: str, ltd_id: str) -> dict:
+        with self._connect_redis() as redis_cli:
+            data = redis_cli.hgetall(f"company:{company_id}:{ltd_id}")
+            return data
+
+    def set_company_ltd_address_data(self, company_id: str, ltd_id: str, address_id: str, data: Union[dict]):
+        with self._connect_redis() as redis_cli:
+            for key, value in data.items():
+                redis_cli.hset(f"company:{company_id}:{ltd_id}:{address_id}", key=key, value=value)
+
+    def get_company_ltd_address_data(self, company_id: str, ltd_id: str, address_id: str) -> dict:
+        with self._connect_redis() as redis_cli:
+            data = redis_cli.hgetall(f"company:{company_id}:{ltd_id}:{address_id}")
+            return data
+
+    def set_company_ltd_address_device_data(self, company_id: str, ltd_id: str, address_id: str, device_id: str,
+                                            data: Union[dict]):
+        with self._connect_redis() as redis_cli:
+            for key, value in data.items():
+                redis_cli.hset(f"company:{company_id}:{ltd_id}:{address_id}:{device_id}", key=key, value=value)
+
+    def get_company_ltd_address_device_data(self, company_id: str, ltd_id: str, address_id: str, device_id: str) -> dict:
+        with self._connect_redis() as redis_cli:
+            data = redis_cli.hgetall(f"company:{company_id}:{ltd_id}:{address_id}:{device_id}")
             return data
 
     def get_managers(self, uid):

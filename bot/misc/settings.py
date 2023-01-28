@@ -4,8 +4,15 @@ from bot.misc.env import DB
 #     ALL ROLE      #
 #####################
 
-ROLE = [(1, "ADMIN"), (2, "SUPERVISOR"), (3, "MANAGER"), (4, "USER")]
-ACCESS = [(1, "HEAD_MANAGER"), (2, "LTD_MANAGER"), (3, "ADDRESS_MANAGER")]
+ROLE = [(1, "Администратор"),
+        (2, "Руководитель менеджеров"),
+        (3, "Менеджер"),
+        (4, "Пользователь")]
+
+ACCESS = [(0, "Без прав доступа к компании"),
+          (1, "Управляющий сети"),
+          (2, "Управляющий 'ООО'"),
+          (3, "Управляющий торговой точки")]
 
 
 #####################
@@ -14,4 +21,3 @@ ACCESS = [(1, "HEAD_MANAGER"), (2, "LTD_MANAGER"), (3, "ADDRESS_MANAGER")]
 
 
 SETTING_DB = DB().get_setting("postgres")
-

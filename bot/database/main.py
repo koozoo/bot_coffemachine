@@ -11,7 +11,7 @@ dsn = "postgresql+asyncpg://postgres:postgres@localhost:5432/postgres"
 # create async engine for interaction
 
 # engine = create_async_engine(SETTING_DB, future=True, echo=True)
-engine = create_async_engine(dsn, future=True, echo=True)
+engine = create_async_engine(dsn, future=True, echo=False)
 
 # create async session for the interaction with database
 

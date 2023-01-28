@@ -15,7 +15,7 @@ class Stuff:
 
     STUFF = []
 
-    ADMINS = [233652006]
+    ADMINS = [] # 233652006
     MANAGERS = []
     SUPERVISOR = []
 
